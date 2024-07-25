@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  certbot:
+    image: certbot/certbot
+    entrypoint: /bin/sh -c '/srv/app/site-reliability-tools/security/certbot.local.sh'
+    volumes:
+      - nginx_certs:/etc/nginx/certs
+      - certbot_config:/etc/letsencrypt
+      - /srv/docker/certs/www/certbot:/var/www/certbot
+      - /srv/app/site-reliability-tools/security/certbot.local.sh:/srv/app/site-reliability-tools/security/certbot.local.sh:rw
+    networks:
+      - portfolio-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+networks:
+  portfolio-network:
+    external: true
+
+volumes:
+  nginx_certs: # This might not be needed
+    external: true
+  certbot_config:
+    external: true
