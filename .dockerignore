@@ -1,1 +1,9 @@
 bitbucket-pipelines.yml
+
+# Ignore Local Certbot files
+site-reliability-tools/security/docker-compose.local.yml
+site-reliability-tools/security/certbot.local.sh
+site-reliability-tools/security/.env.template
+
+# Ignore Local Portainer files
+site-reliability-tools/maintenance/README.md
