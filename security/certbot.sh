@@ -1,7 +1,8 @@
 #!/bin/sh
-ENV_CONFIG=".env"
+APP_WORKING_DIR="/srv/app"
+CERTBOT_DIR="$APP_WORKING_DIR/site-reliability-tools/security"
+ENV_CONFIG=$CERTBOT_DIR/.env
 WEBROOT_PATH="/var/www/certbot"
-LETSENCRYPT_PATH="/etc/letsencrypt/live/$DOMAIN" # I am using a volume not a path
 
 # Initial environment variables from .env file
 if [ -e $ENV_CONFIG ]; then
@@ -11,13 +12,15 @@ if [ -e $ENV_CONFIG ]; then
     set +o allexport
 
     # Check for required variables
-    REQUIRED_VARS=(DOMAIN EMAIL)
+    REQUIRED_VARS="DOMAIN EMAIL API_SUBDOMAIN PORTAINER_SUBDOMAIN"
     for VAR in "${REQUIRED_VARS[@]}"; do
         if [ -z "${!VAR}" ]; then
             echo "Error: $VAR is not set in $ENV_CONFIG"
             exit 1
         fi
     done
+
+    LETSENCRYPT_PATH="/etc/letsencrypt/live/$DOMAIN"
 
     echo "All required variables are set."
 else
@@ -29,15 +32,15 @@ echo "Starting Certbot script..."
 
 if [ ! -d "$LETSENCRYPT_PATH" ] || ! openssl x509 -checkend 2592000 -noout -in "$LETSENCRYPT_PATH/fullchain.pem"; then
     echo "Requesting initial certificate for $DOMAIN"
-    certbot certonly --webroot --webroot-path=$WEBROOT_PATH --email $EMAIL --agree-tos --no-eff-email -d $DOMAIN -d $SUBDOMAIN
+    certbot certonly --webroot --webroot-path=$WEBROOT_PATH --email $EMAIL --agree-tos --no-eff-email -d $DOMAIN -d $API_SUBDOMAIN -d $PORTAINER_SUBDOMAIN
     if [ $? -ne 0 ]; then
-        echo "Failed to obtain certificate for $DOMAIN. Entering infinite sleep."
+        echo "Failed to obtain certificate for DOMAIN: $DOMAIN API_SUBDOMAIN: $API_SUBDOMAIN PORTAINER_SUBDOMAIN: $PORTAINER_SUBDOMAIN. Entering infinite sleep."
         while :; do
             sleep 1d
         done
     fi
 else
-    echo "Certificate for $DOMAIN is already valid and not expiring soon."
+    echo "Certificate for domains are already valid and not expiring soon."
 fi
 
 while :; do

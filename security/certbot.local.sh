@@ -1,22 +1,25 @@
 #!/bin/sh
-
-SELF_SIGNED_CERT_PATH="/etc/letsencrypt/live/purnelljones.com"
+APP_WORKING_DIR="/srv/app"
+CERTBOT_DIR="$APP_WORKING_DIR/site-reliability-tools/security"
+ENV_CONFIG=$CERTBOT_DIR/.env
 
 # Initial environment variables from .env file
 if [ -e $ENV_CONFIG ]; then
     echo "Setting environment variables for $ENV_CONFIG file"
     set -o allexport
-    . .env
+    . $ENV_CONFIG
     set +o allexport
 
     # Check for required variables
-    REQUIRED_VARS=(DOMAIN EMAIL)
-    for VAR in "${REQUIRED_VARS[@]}"; do
-        if [ -z "${!VAR}" ]; then
+    REQUIRED_VARS="DOMAIN API_SUBDOMAIN PORTAINER_SUBDOMAIN"
+    for VAR in $REQUIRED_VARS; do
+        if [ -z "$(eval echo \$$VAR)" ]; then
             echo "Error: $VAR is not set in $ENV_CONFIG"
             exit 1
         fi
     done
+
+    SELF_SIGNED_CERT_PATH="/etc/letsencrypt/live/$DOMAIN"
 
     echo "All required variables are set."
 else
@@ -27,8 +30,10 @@ fi
 echo "Starting self-signed certificate generation script..."
 
 # Create the certificates directory if it doesn't exist
-mkdir -p $SELF_SIGNED_CERT_PATH
-
+mkdir -p "$SELF_SIGNED_CERT_PATH" || {
+    echo "Failed to create directory: $SELF_SIGNED_CERT_PATH"
+    exit 1
+}
 
 # Generate a self-signed certificate if it doesn't exist or is about to expire
 if [ ! -f "$SELF_SIGNED_CERT_PATH/localhost.crt" ] || ! openssl x509 -checkend 2592000 -noout -in "$SELF_SIGNED_CERT_PATH/localhost.crt"; then
