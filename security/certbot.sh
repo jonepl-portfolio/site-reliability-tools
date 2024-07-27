@@ -19,8 +19,8 @@ if [ -e $ENV_CONFIG ]; then
 
     # Check for required variables
     REQUIRED_VARS="DOMAIN EMAIL API_SUBDOMAIN PORTAINER_SUBDOMAIN"
-    for VAR in "${REQUIRED_VARS[@]}"; do
-        if [ -z "${!VAR}" ]; then
+    for VAR in $REQUIRED_VARS; do
+        if [ -z "$(eval echo \$$VAR)" ]; then
             echo "Error: $VAR is not set in $ENV_CONFIG"
             exit 1
         fi
