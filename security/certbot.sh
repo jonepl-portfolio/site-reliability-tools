@@ -6,6 +6,7 @@ WEBROOT_PATH="/var/www/certbot"
 
 domain_in_certificate() {
     local domain=$1
+    echo "Checking sub domain $domain"
     openssl x509 -in "$LETSENCRYPT_PATH/fullchain.pem" -text -noout | grep -q "DNS:$domain"
 }
 

@@ -52,4 +52,7 @@ jobs:
       - name: Copy Docker Compose file to remote server
         run: |
           ssh-keyscan -t ed25519 ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hostsz
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 security/certbot.sh security/docker-compose.yml maintenance/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
+            security/certbot.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security/ \
+            security/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security/ \
+            maintenance/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/maintenance/
