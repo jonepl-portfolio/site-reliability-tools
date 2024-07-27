@@ -4,6 +4,11 @@ CERTBOT_DIR="$APP_WORKING_DIR/site-reliability-tools/security"
 ENV_CONFIG=$CERTBOT_DIR/.env
 WEBROOT_PATH="/var/www/certbot"
 
+domain_in_certificate() {
+    local domain=$1
+    openssl x509 -in "$LETSENCRYPT_PATH/fullchain.pem" -text -noout | grep -q "DNS:$domain"
+}
+
 # Initial environment variables from .env file
 if [ -e $ENV_CONFIG ]; then
     echo "Setting environment variables for $ENV_CONFIG file"
@@ -30,9 +35,19 @@ fi
 
 echo "Starting Certbot script..."
 
-if [ ! -d "$LETSENCRYPT_PATH" ] || ! openssl x509 -checkend 2592000 -noout -in "$LETSENCRYPT_PATH/fullchain.pem"; then
-    echo "Requesting initial certificate for $DOMAIN"
+# Check if the certificate is about to expire or if there are new domains
+if [ ! -d "$LETSENCRYPT_PATH" ] || \ 
+    ! openssl x509 -checkend 2592000 -noout -in "$LETSENCRYPT_PATH/fullchain.pem" || \
+    ! domain_in_certificate $DOMAIN || \
+    ! domain_in_certificate $API_SUBDOMAIN || \
+    ! domain_in_certificate $PORTAINER_SUBDOMAIN; then
+    
+    echo "Requesting certificate for $DOMAIN and additional subdomains"
+
+    # Request new certificate
     certbot certonly --webroot --webroot-path=$WEBROOT_PATH --email $EMAIL --agree-tos --no-eff-email -d $DOMAIN -d $API_SUBDOMAIN -d $PORTAINER_SUBDOMAIN
+
+    # Suspend container on failure
     if [ $? -ne 0 ]; then
         echo "Failed to obtain certificate for DOMAIN: $DOMAIN API_SUBDOMAIN: $API_SUBDOMAIN PORTAINER_SUBDOMAIN: $PORTAINER_SUBDOMAIN. Entering infinite sleep."
         while :; do
