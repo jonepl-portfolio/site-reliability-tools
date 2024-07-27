@@ -14,7 +14,7 @@ domain_in_certificate() {
 if [ -e $ENV_CONFIG ]; then
     echo "Setting environment variables for $ENV_CONFIG file"
     set -o allexport
-    . .env
+    . $ENV_CONFIG
     set +o allexport
 
     # Check for required variables
