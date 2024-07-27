@@ -45,8 +45,8 @@ if [ ! -d "$LETSENCRYPT_PATH" ] || \
     
     echo "Requesting certificate for $DOMAIN and additional subdomains"
 
-    # Request new certificate
-    certbot certonly --webroot --webroot-path=$WEBROOT_PATH --email $EMAIL --agree-tos --no-eff-email -d $DOMAIN -d $API_SUBDOMAIN -d $PORTAINER_SUBDOMAIN
+    # Request new or expand existing certificate
+    certbot certonly --webroot --webroot-path=$WEBROOT_PATH --email $EMAIL --agree-tos --no-eff-email --expand -d $DOMAIN -d $API_SUBDOMAIN -d $PORTAINER_SUBDOMAIN
 
     # Suspend container on failure
     if [ $? -ne 0 ]; then
