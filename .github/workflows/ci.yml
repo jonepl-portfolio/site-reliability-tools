@@ -53,6 +53,8 @@ jobs:
         run: |
           ssh-keyscan -t ed25519 ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hostsz
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
-            security/certbot.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security/ \
-            security/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security/ \
-            maintenance/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/maintenance/
+              security/certbot.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security/
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
+              security/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security/
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
+              maintenance/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/maintenance/
