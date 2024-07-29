@@ -1,7 +1,7 @@
 #!/bin/sh
 APP_WORKING_DIR="/srv/app"
 CERTBOT_DIR="$APP_WORKING_DIR/site-reliability-tools/security"
-ENV_CONFIG=$CERTBOT_DIR/.env
+ENV_CONFIG="/run/secrets/app_config"
 WEBROOT_PATH="/var/www/certbot"
 
 domain_in_certificate() {

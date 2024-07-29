@@ -10,6 +10,8 @@ services:
       - /srv/docker/certs/www/certbot:/var/www/certbot
       - /srv/app/site-reliability-tools/security/certbot.sh:/srv/app/site-reliability-tools/security/certbot.sh:rw
       - .env:/srv/app/site-reliability-tools/security/.env:ro
+    secrets:
+      - app_config
     networks:
       - portfolio-network
     deploy:
@@ -25,4 +27,8 @@ volumes:
   nginx_certs: # This might not be needed
     external: true
   certbot_config:
+    external: true
+
+secrets:
+  app_config:
     external: true

@@ -12,6 +12,8 @@ services:
       - .env:/srv/app/site-reliability-tools/security/.env:ro
     networks:
       - portfolio-network
+    secrets:
+      - app_config
     deploy:
       replicas: 1
       restart_policy:
@@ -25,4 +27,8 @@ volumes:
   nginx_certs: # This might not be needed
     external: true
   certbot_config:
+    external: true
+
+secrets:
+  app_config:
     external: true
