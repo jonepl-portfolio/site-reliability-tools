@@ -9,7 +9,6 @@ services:
       - certbot_config:/etc/letsencrypt
       - /srv/docker/certs/www/certbot:/var/www/certbot
       - /srv/app/site-reliability-tools/security/certbot.local.sh:/srv/app/site-reliability-tools/security/certbot.local.sh:rw
-      - .env:/srv/app/site-reliability-tools/security/.env:ro
     networks:
       - portfolio-network
     secrets:
