@@ -10,9 +10,14 @@ domain_in_certificate() {
     openssl x509 -in "$LETSENCRYPT_PATH/fullchain.pem" -text -noout | grep -q "DNS:$domain"
 }
 
+log_message() {
+    local message="$1"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $message"
+}
+
 # Initial environment variables from .env file
 if [ -e $ENV_CONFIG ]; then
-    echo "Setting environment variables for $ENV_CONFIG file"
+    log_message "Setting environment variables for $ENV_CONFIG file"
     set -o allexport
     . $ENV_CONFIG
     set +o allexport
@@ -21,20 +26,20 @@ if [ -e $ENV_CONFIG ]; then
     REQUIRED_VARS="DOMAIN EMAIL API_SUBDOMAIN PORTAINER_SUBDOMAIN"
     for VAR in $REQUIRED_VARS; do
         if [ -z "$(eval echo \$$VAR)" ]; then
-            echo "Error: $VAR is not set in $ENV_CONFIG"
+            log_message "Error: $VAR is not set in $ENV_CONFIG"
             exit 1
         fi
     done
 
     LETSENCRYPT_PATH="/etc/letsencrypt/live/$DOMAIN"
 
-    echo "All required variables are set."
+    log_message "All required variables are set."
 else
-    echo "No $ENV_CONFIG found."
+    log_message "No $ENV_CONFIG found."
     exit 1
 fi
 
-echo "Starting Certbot script..."
+log_message "Starting Certbot script..."
 
 # Check if the certificate is about to expire or if there are new domains
 if [ ! -d "$LETSENCRYPT_PATH" ] || \ 
@@ -43,24 +48,24 @@ if [ ! -d "$LETSENCRYPT_PATH" ] || \
     ! domain_in_certificate $API_SUBDOMAIN || \
     ! domain_in_certificate $PORTAINER_SUBDOMAIN; then
     
-    echo "Requesting certificate for $DOMAIN and additional subdomains"
+    log_message "Requesting certificate for $DOMAIN and additional subdomains"
 
     # Request new or expand existing certificate
     certbot certonly --webroot --webroot-path=$WEBROOT_PATH --email $EMAIL --agree-tos --no-eff-email --expand -d $DOMAIN -d $API_SUBDOMAIN -d $PORTAINER_SUBDOMAIN
 
     # Suspend container on failure
     if [ $? -ne 0 ]; then
-        echo "Failed to obtain certificate for DOMAIN: $DOMAIN API_SUBDOMAIN: $API_SUBDOMAIN PORTAINER_SUBDOMAIN: $PORTAINER_SUBDOMAIN. Entering infinite sleep."
+        log_message "Failed to obtain certificate for DOMAIN: $DOMAIN API_SUBDOMAIN: $API_SUBDOMAIN PORTAINER_SUBDOMAIN: $PORTAINER_SUBDOMAIN. Entering infinite sleep."
         while :; do
             sleep 1d
         done
     fi
 else
-    echo "Certificate for domains are already valid and not expiring soon."
+    log_message "Certificate for domains are already valid and not expiring soon."
 fi
 
 while :; do
-    echo "Attempting to renew Certbot certification ..."
+    log_message "Attempting to renew Certbot certification ..."
     certbot renew
     sleep 12h
 done
