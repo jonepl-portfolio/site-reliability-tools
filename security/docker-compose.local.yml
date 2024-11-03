@@ -5,7 +5,6 @@ services:
     image: certbot/certbot
     entrypoint: /bin/sh -c '/srv/app/site-reliability-tools/security/certbot.local.sh'
     volumes:
-      - nginx_certs:/etc/nginx/certs
       - certbot_config:/etc/letsencrypt
       - /srv/docker/certs/www/certbot:/var/www/certbot
       - /srv/app/site-reliability-tools/security/certbot.local.sh:/srv/app/site-reliability-tools/security/certbot.local.sh:rw
@@ -23,8 +22,6 @@ networks:
     external: true
 
 volumes:
-  nginx_certs: # This might not be needed
-    external: true
   certbot_config:
     external: true
 

@@ -1,0 +1,7 @@
+LOCAL_DOMAIN="localhost"
+DOMAIN="mydomain.com"
+API_SUBDOMAIN="api"
+PORTAINER_SUBDOMAIN="portainer"
+EMAIL="example@example.com"
+SELF_SIGN_CERTIFICATE_NAME="localhost.crt"
+SELF_SIGN_CERTIFICATE_KEY_NAME="localhost.key"
