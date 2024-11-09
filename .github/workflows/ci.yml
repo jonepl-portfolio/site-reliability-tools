@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Install Docker Compose
         run: |
@@ -27,14 +29,61 @@ jobs:
           docker-compose -f maintenance/docker-compose.yml config
           docker-compose -f security/docker-compose.local.yml config
 
+  create-changes-artifact:
+    name: Create Changes Artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Fetch main branch for comparison
+        run: git fetch origin main:main
+
+      - name: Check for changes in maintenance folder
+        id: maintenance_changes
+        run: |
+          if git diff --name-only main...HEAD | grep -q '^maintenance/'; then
+            echo "Detected changes within the maintenance folder."
+            echo "maintenance_changes=true" >> folder_changes.txt
+          else
+            echo "No changes detected within the maintenance folder."
+            echo "maintenance_changes=false" >> folder_changes.txt
+          fi
+
+      - name: Check for changes in security folder
+        id: security_changes
+        run: |
+          if git diff --name-only main...HEAD | grep -q '^security/'; then
+            echo "Detected changes within the security folder."
+            echo "security_changes=true" >> folder_changes.txt
+          else
+            echo "No changes detected within the security folder."
+            echo "security_changes=false" >> folder_changes.txt
+          fi
+
+      - name: Upload changes artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: changes-artifact
+          path: |
+            folder_changes.txt
+
   deploy-docker-compose:
     name: Deploy Docker Compose Files
     runs-on: ubuntu-latest
-    needs: validate-docker-compose
+    needs: [validate-docker-compose , create-changes-artifact]
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: changes-artifact
+          path: ./artifacts
 
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -52,39 +101,33 @@ jobs:
       - name: Check SSH connection
         run: ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} 'echo "SSH connection successful"'
 
-      - name: Check for changes in security folder
-        id: security_changes
+      - name: Deploy security changes
+        id: deploy_security_changes
         run: |
-          if git diff --name-only HEAD^ HEAD | grep -q '^sre-app/security/'; then
-            echo "security_changed=true" >> $GITHUB_ENV
+          # Load the security_changes value from the artifact file
+          if grep -q 'security_changes=true' ./artifacts/folder_changes.txt; then
+            echo "Security folder has changes. Proceeding with deployment."
+            ssh-keyscan -t ed25519 ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+            scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
+                security/certbot.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security/
+            scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
+                security/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security/
           else
-            echo "security_changed=false" >> $GITHUB_ENV
+            echo "No changes in security folder. Skipping deployment."
           fi
 
-      - name: Check for changes in maintenance folder
-        id: maintenance_changes
+      - name: Deploy maintenance changes
+        id: deploy_maintenance_changes
         run: |
-          if git diff --name-only HEAD^ HEAD | grep -q '^sre-app/maintenance/'; then
-            echo "maintenance_changed=true" >> $GITHUB_ENV
+          # Load the maintenance_changes value from the artifact file
+          if grep -q 'maintenance_changes=true' ./artifacts/folder_changes.txt; then
+            echo "Maintenance folder has changes. Proceeding with deployment."
+            ssh-keyscan -t ed25519 ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+            scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
+                maintenance/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/maintenance/
           else
-            echo "maintenance_changed=false" >> $GITHUB_ENV
+            echo "No changes in maintenance folder. Skipping deployment."
           fi
-
-      - name: Deploy security folder changes
-        if: env.security_changed == 'true'
-        run: |
-          ssh-keyscan -t ed25519 ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
-              sre-app/security/certbot.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security/
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
-              sre-app/security/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security/
-
-      - name: Deploy maintenance folder changes
-        if: env.maintenance_changed == 'true'
-        run: |
-          ssh-keyscan -t ed25519 ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
-              sre-app/maintenance/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/maintenance/
 
       - name: Update Docker Swarm service
         run: |
