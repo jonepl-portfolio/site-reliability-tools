@@ -28,7 +28,6 @@ services:
   agent:
     image: portainer/agent:latest
     environment:
-      # REQUIRED: Should be equal to the service name prefixed by "tasks." when
       # deployed inside an overlay network
       AGENT_CLUSTER_ADDR: tasks.agent
       # AGENT_PORT: 9001

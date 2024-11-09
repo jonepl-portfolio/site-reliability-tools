@@ -37,12 +37,12 @@ jobs:
           fetch-depth: 0
       
       - name: Fetch main branch for comparison
-        run: git fetch origin main:main
+        run: git fetch origin main
 
       - name: Check for changes in maintenance folder
         id: maintenance_changes
         run: |
-          if git diff --name-only main...HEAD | grep -q '^maintenance/'; then
+          if git diff --name-only origin/main...HEAD | grep -q '^maintenance/'; then
             echo "Detected changes within the maintenance folder."
             echo "maintenance_changes=true" >> folder_changes.txt
           else
@@ -53,7 +53,7 @@ jobs:
       - name: Check for changes in security folder
         id: security_changes
         run: |
-          if git diff --name-only main...HEAD | grep -q '^security/'; then
+          if git diff --name-only origin/main...HEAD | grep -q '^security/'; then
             echo "Detected changes within the security folder."
             echo "security_changes=true" >> folder_changes.txt
           else
