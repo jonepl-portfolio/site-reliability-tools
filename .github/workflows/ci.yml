@@ -81,13 +81,9 @@ jobs:
         run: |
           ssh-keyscan -t ed25519 ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
-<<<<<<< Updated upstream
-              maintenance/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/maintenance/
-=======
               sre-app/maintenance/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/maintenance/
 
       - name: Update Docker Swarm service
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
               'docker stack deploy -c /srv/app/site-reliability-tools/security/docker-compose.yml -c /srv/app/site-reliability-tools/maintenance/docker-compose.yml hosted-apps'
->>>>>>> Stashed changes
