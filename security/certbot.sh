@@ -85,7 +85,7 @@ create_certificate_authority_certificate
 #     create_certificate_authority_certificate
 # else
 #     create_self_signed_certificate
-# fi
+# fi 
 
 while :; do
     echo "Attempting to renew Certbot certification ..."
