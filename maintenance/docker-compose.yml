@@ -51,3 +51,4 @@ networks:
 
 volumes:
   portainer_data:
+
