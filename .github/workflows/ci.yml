@@ -68,7 +68,7 @@ jobs:
           path: |
             folder_changes.txt
 
-  deploy-docker-compose:
+  deploy:
     name: Deploy Docker Compose Files
     runs-on: ubuntu-latest
     needs: [validate-docker-compose , create-changes-artifact]
@@ -106,10 +106,17 @@ jobs:
           if grep -q 'security_changes=true' ./artifacts/folder_changes.txt; then
             echo "Security folder has changes. Proceeding with deployment."
             ssh-keyscan -t ed25519 ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-            scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
-                security/certbot.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security/
-            scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
-                security/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security/
+
+            for file in security/certbot.sh security/docker-compose.yml; do
+              scp -o StrictHostKeyChecking=no $file ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/security
+
+              if [ $? -eq 0 ]; then
+                echo "Security file transferred for $file successfully."
+              else
+                echo "Error transferring security file for $file."
+                exit 1
+              fi
+            done
           else
             echo "No changes in security folder. Skipping deployment."
           fi
@@ -123,6 +130,14 @@ jobs:
             ssh-keyscan -t ed25519 ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
             scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 \
                 maintenance/docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/srv/app/site-reliability-tools/maintenance/
+
+            # Check if the scp command was successful
+            if [ $? -eq 0 ]; then
+              echo "Maintenance file transferred for docker-compose.yml successfully."
+            else
+              echo "Error transferring maintenance file for docker-compose.yml."
+              exit 1
+            fi
           else
             echo "No changes in maintenance folder. Skipping deployment."
           fi
@@ -130,4 +145,4 @@ jobs:
       - name: Update Docker Swarm service
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-              'docker stack deploy -c /srv/app/site-reliability-tools/security/docker-compose.yml -c /srv/app/site-reliability-tools/maintenance/docker-compose.yml sre-tools'
+              'docker stack deploy -c /srv/app/site-reliability-tools/security/docker-compose.yml -c /srv/app/site-reliability-tools/maintenance/docker-compose.yml sre-tools || echo "Deployment failed with error $?"'
