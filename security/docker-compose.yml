@@ -7,6 +7,7 @@ services:
     volumes:
       - nginx_certs:/etc/nginx/certs
       - certbot_config:/etc/letsencrypt
+      - /srv/.ssh/:/srv/.ssh
       - /srv/docker/certs/www/certbot:/var/www/certbot
       - /srv/app/site-reliability-tools/security/certbot.sh:/srv/app/site-reliability-tools/security/certbot.sh:rw
     secrets:
