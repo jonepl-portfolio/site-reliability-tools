@@ -3,7 +3,7 @@ APP_WORKING_DIR="/srv/app"
 ENV_CONFIG="/run/secrets/app_config"
 WEBROOT_PATH="/var/www/certbot"
 BASE_SSL_DIR="/etc/letsencrypt/live"
-SWARM_SERVICE_NAME="api-gateway"
+SWARM_SERVICE_NAME="api-gateway" 
 
 log_message() {
     local level="$1"
