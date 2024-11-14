@@ -29,7 +29,7 @@ initialize_env_vars() {
         set +o allexport
 
         # Check for required variables
-        REQUIRED_VARS="DOMAIN EMAIL API_SUBDOMAIN PORTAINER_SUBDOMAIN CA_SIGN_CERTIFICATE_NAME SSH_USER SERVER_IP"
+        REQUIRED_VARS="DOMAIN EMAIL API_SUBDOMAIN PORTAINER_SUBDOMAIN CA_SIGN_CERTIFICATE_NAME"
         for VAR in $REQUIRED_VARS; do
             if [ -z "$(eval echo \$$VAR)" ]; then
                 log_message "ERROR" "Error: $VAR is not set in $ENV_CONFIG"
