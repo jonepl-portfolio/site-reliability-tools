@@ -77,7 +77,7 @@ create_certificate_authority_certificate() {
 renew_certificates_periodically() {
     while :; do
         log_message "INFO" "Attempting to renew Certbot certificates with deploy-hook to update $SWARM_SERVICE_NAME ..."
-        certbot renew --deploy-hook "/usr/bin/docker service update --force $SWARM_SERVICE_NAME"
+        certbot renew --deploy-hook "/usr/bin/docker service update --force $SWARM_SERVICE_NAME" --disable-hook-validation
 
         if [ $? -eq 0 ]; then
             log_message "INFO" "Certificate renewed successfully and $SWARM_SERVICE_NAME service updated."
