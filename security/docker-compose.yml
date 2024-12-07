@@ -11,7 +11,7 @@ services:
       - /srv/docker/certs/www/certbot:/var/www/certbot
       - /srv/app/site-reliability-tools/security/certbot.sh:/srv/app/site-reliability-tools/security/certbot.sh:rw
     secrets:
-      - app_config
+      - shared_secret
     networks:
       - portfolio-network
     deploy:
@@ -28,5 +28,5 @@ volumes:
     external: true
 
 secrets:
-  app_config:
+  shared_secret:
     external: true

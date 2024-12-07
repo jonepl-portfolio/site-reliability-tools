@@ -1,6 +1,6 @@
 #!/bin/sh
 APP_WORKING_DIR="/srv/app"
-ENV_CONFIG="/run/secrets/app_config"
+SHARED_SECRET="/run/secrets/shared_secret"
 WEBROOT_PATH="/var/www/certbot"
 BASE_SSL_DIR="/etc/letsencrypt/live"
 SWARM_SERVICE_NAME="api-gateway" 
@@ -22,17 +22,17 @@ check_domains_in_certificate() {
 }
 
 initialize_env_vars() {
-    if [ -e "$ENV_CONFIG" ]; then
-        log_message "INFO" "Setting environment variables for $ENV_CONFIG file"
+    if [ -e "$SHARED_SECRET" ]; then
+        log_message "INFO" "Setting environment variables for $SHARED_SECRET file"
         set -o allexport
-        . "$ENV_CONFIG"
+        . "$SHARED_SECRET"
         set +o allexport
 
         # Check for required variables
         REQUIRED_VARS="DOMAIN EMAIL API_SUBDOMAIN PORTAINER_SUBDOMAIN CA_SIGN_CERTIFICATE_NAME"
         for VAR in $REQUIRED_VARS; do
             if [ -z "$(eval echo \$$VAR)" ]; then
-                log_message "ERROR" "Error: $VAR is not set in $ENV_CONFIG"
+                log_message "ERROR" "Error: $VAR is not set in $SHARED_SECRET"
                 exit 1
             fi
         done
@@ -43,7 +43,7 @@ initialize_env_vars() {
         SSL_DIR="$BASE_SSL_DIR/$DOMAIN"
         mkdir -p "$SSL_DIR"
     else
-        log_message "ERROR" "No $ENV_CONFIG found."
+        log_message "ERROR" "No $SHARED_SECRET found."
         exit 1
     fi
 }

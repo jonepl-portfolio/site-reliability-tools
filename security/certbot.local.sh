@@ -1,20 +1,20 @@
 #!/bin/sh
 APP_WORKING_DIR="/srv/app"
 CERTBOT_DIR="$APP_WORKING_DIR/site-reliability-tools/security"
-ENV_CONFIG="/run/secrets/app_config"
+SHARED_SECRET="/run/secrets/shared_secret"
 
 # Initial environment variables from .env file
-if [ -e $ENV_CONFIG ]; then
-    echo "Setting environment variables for $ENV_CONFIG file"
+if [ -e $SHARED_SECRET ]; then
+    echo "Setting environment variables for $SHARED_SECRET file"
     set -o allexport
-    . $ENV_CONFIG
+    . $SHARED_SECRET
     set +o allexport
 
     # Check for required variables
     REQUIRED_VARS="DOMAIN API_SUBDOMAIN PORTAINER_SUBDOMAIN"
     for VAR in $REQUIRED_VARS; do
         if [ -z "$(eval echo \$$VAR)" ]; then
-            echo "Error: $VAR is not set in $ENV_CONFIG"
+            echo "Error: $VAR is not set in $SHARED_SECRET"
             exit 1
         fi
     done
@@ -23,7 +23,7 @@ if [ -e $ENV_CONFIG ]; then
 
     echo "All required variables are set."
 else
-    echo "No $ENV_CONFIG found."
+    echo "No $SHARED_SECRET found."
     exit 1
 fi
 
