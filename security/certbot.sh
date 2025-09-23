@@ -3,7 +3,7 @@ APP_WORKING_DIR="/srv/app"
 SHARED_SECRET="/run/secrets/shared_secret"
 WEBROOT_PATH="/var/www/certbot"
 BASE_SSL_DIR="/etc/letsencrypt/live"
-SWARM_SERVICE_NAME="api-gateway" 
+SWARM_SERVICE_NAME="hosted-apps_nginx" 
 
 log_message() {
     local level="$1"
